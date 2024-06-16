@@ -138,8 +138,88 @@ const App: React.FC = () => {
     },
   ];
 
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
+  const [score, setScore] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showScore, setShowScore] = useState(false);
 
+  const handleAnswerClick = (answer: string) => {
+    setSelectedAnswer(answer);
+    if (answer === questions[currentQuestionIndex].correct) {
+      setScore(score + 1);
+    }
+  };
 
+  const handleNextQuestion = () => {
+    setSelectedAnswer(null);
+    const nextQuestionIndex = currentQuestionIndex + 1;
+    if (nextQuestionIndex < questions.length) {
+      setCurrentQuestionIndex(nextQuestionIndex);
+    } else {
+      setShowScore(true);
+    }
+  };
 
+  const handlePreviousQuestion = () => {
+    setSelectedAnswer(null);
+    setShowScore(false);
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
 
+  const handleBeginQuiz = () => {
+    setCurrentQuestionIndex(0);
+  };
 
+  const handleRestartQuiz = () => {
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setShowScore(false);
+  };
+
+  return (
+    <div className="app">
+      {!showScore && currentQuestionIndex === -1 && (
+        <div className="title-page">
+          <h1>~ Hector's (not really) Hard Trivia Quiz ~</h1>
+          <h2>Good Luck!</h2>
+          <button onClick={handleBeginQuiz}>Begin</button>
+        </div>
+      )}
+      {!showScore && currentQuestionIndex !== -1 && (
+        <>
+          <Question question={questions[currentQuestionIndex].question} />
+          <div className="answers">
+            {questions[currentQuestionIndex].answers.map((answer, index) => (
+              <Answer
+                key={index}
+                answer={answer}
+                handleAnswerClick={handleAnswerClick}
+                selectedAnswer={selectedAnswer}
+              />
+            ))}
+          </div>
+          {selectedAnswer && (
+            <div>
+              <button
+                onClick={handlePreviousQuestion}
+                disabled={currentQuestionIndex === 0}
+              >
+                Previous Question
+              </button>
+              <button onClick={handleNextQuestion}>Next Question</button>
+            </div>
+          )}
+        </>
+      )}
+      {showScore && (
+        <div>
+          <Score score={score} onRestartQuiz={handleRestartQuiz} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
