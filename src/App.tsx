@@ -142,12 +142,43 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showScore, setShowScore] = useState(false);
+  const [answeredCorrectly, setAnsweredCorrectly] = useState<boolean[]>(
+    Array(questions.length).fill(false)
+  );
+  const [previousSelectedAnswers, setPreviousSelectedAnswers] = useState<
+    (string | null)[]
+  >(Array(questions.length).fill(null));
 
   const handleAnswerClick = (answer: string) => {
-    setSelectedAnswer(answer);
-    if (answer === questions[currentQuestionIndex].correct) {
-      setScore(score + 1);
+    const currentQuestion = questions[currentQuestionIndex];
+    const isCorrect = answer === currentQuestion.correct;
+    const previousAnswer = previousSelectedAnswers[currentQuestionIndex];
+
+    if (previousAnswer !== null) {
+      if (
+        previousAnswer === currentQuestion.correct &&
+        answer !== currentQuestion.correct
+      ) {
+        setScore(score - 1);
+      } else if (
+        previousAnswer !== currentQuestion.correct &&
+        answer === currentQuestion.correct
+      ) {
+        setScore(score + 1);
+      }
+    } else {
+      if (isCorrect) {
+        setScore(score + 1);
+      }
     }
+
+    setPreviousSelectedAnswers((prevAnswers) => {
+      const updatedAnswers = [...prevAnswers];
+      updatedAnswers[currentQuestionIndex] = answer;
+      return updatedAnswers;
+    });
+
+    setSelectedAnswer(answer);
   };
 
   const handleNextQuestion = () => {
@@ -162,7 +193,6 @@ const App: React.FC = () => {
 
   const handlePreviousQuestion = () => {
     setSelectedAnswer(null);
-    setShowScore(false);
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
@@ -173,16 +203,19 @@ const App: React.FC = () => {
   };
 
   const handleRestartQuiz = () => {
-    setCurrentQuestionIndex(0);
+    setCurrentQuestionIndex(-1);
     setScore(0);
     setShowScore(false);
+    setAnsweredCorrectly(Array(questions.length).fill(false));
+    setSelectedAnswer(null);
+    setPreviousSelectedAnswers(Array(questions.length).fill(null));
   };
 
   return (
     <div className="app">
       {!showScore && currentQuestionIndex === -1 && (
         <div className="title-page">
-          <h1>~ Hector's (not really) Hard Trivia Quiz ~</h1>
+          <h1> ~ Hector's (not really) Hard Trivia Quiz ~ </h1>
           <h2>Good Luck!</h2>
           <button onClick={handleBeginQuiz}>Begin</button>
         </div>
